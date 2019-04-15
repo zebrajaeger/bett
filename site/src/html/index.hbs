@@ -1,0 +1,29 @@
+---
+title: Bed v1.0.0
+---
+<html>
+<head>
+    <title>{{title}}</title>
+    <style>{{> app.css }}</style>
+    <script>{{> app.js }}</script>
+</head>
+<body>
+{{>icon-definition}}
+<div class="wrapper">
+    <div id="up" class="button button__up">
+        <div class="label">
+            <svg class="icon icon-upload">
+                <use xlink:href="#icon-upload"></use>
+            </svg>
+        </div>
+    </div>
+    <div id="down" class="button button__down">
+        <div class="label">
+            <svg class="icon icon-download">
+                <use xlink:href="#icon-download"></use>
+            </svg>
+        </div>
+    </div>
+</div>
+</body>
+</html>
