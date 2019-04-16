@@ -3,14 +3,24 @@ let app = {
     $up: null,
     $down: null,
     timer: null,
-    interval: 40
+    interval: 40,
+    pending: false
 };
 
 function callBed(value) {
-    $.get(value)
-        .fail((e) => {
-            //TODO
-        });
+    if (!app.pending) {
+        app.pending = true;
+        $.get(value)
+            .done(() => {
+                // TODO
+            })
+            .fail((e) => {
+                // TODO
+            })
+            .always(() => {
+                app.pending = false;
+            });
+    }
 }
 
 function onTimer() {

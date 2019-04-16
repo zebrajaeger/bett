@@ -10,6 +10,7 @@ const env = require('@zebrajaeger/gulp-simple-env')({
 
 // gulp
 const {task, src, dest, series, watch} = require('gulp');
+const through = require('through2');
 const extreplace = require('gulp-ext-replace');
 
 const hb = require('gulp-hb');
@@ -35,6 +36,10 @@ const dir = {
     base: path.resolve(),
     src: {
         base: path.resolve('src'),
+        assets: {
+            base: path.resolve('src/assets'),
+            files: path.resolve('src/assets/**/*'),
+        },
         html: {
             base: path.resolve('src/html'),
             hbs: path.resolve('src/html/*.hbs'),
@@ -56,14 +61,26 @@ const dir = {
     },
     dist: {
         base: path.resolve('dist'),
-        html:  path.resolve('dist/index.html'),
-        h:  path.resolve('dist/index.h'),
+        files: path.resolve('dist/**/*'),
     },
     temp: {
         base: path.resolve('.tmp'),
         partials: path.resolve('.tmp/**/*.hbs'),
     },
+    target: {
+        base: path.resolve('../sonoff/data'),
+    }
 };
+
+// helpers
+function fontMatterFileName(){
+    return through.obj(function(file, enc, next) {
+        if(file && file.data && file.data.filename){
+            file.path = path.join(path.dirname(file.path), file.data.filename);
+        }
+        next(null, file);
+    });
+}
 
 task('clean', cb => {
     rimraf.sync(dir.temp.base);
@@ -91,12 +108,13 @@ task('js', () => {
 task('html', () => {
     //mkdirp.sync(dir.dist);
     return src(dir.src.html.hbs)
-        .pipe(extname())
         .pipe(
             frontMatter({
                 property: 'data'
             })
         )
+        .pipe(extname())
+        .pipe(fontMatterFileName())
         .pipe(
             hb({'cwd': dir.base})
                 .data(dir.src.html.data)
@@ -110,20 +128,9 @@ task('html', () => {
         .pipe(dest(dir.dist.base))
 });
 
-task('header', (cb)=>{
-    let data = fs.readFileSync(dir.dist.html);
-    let fd = fs.openSync(dir.dist.h, 'as');
-
-    let prefix = Buffer.from('R"(');
-    fs.writeSync(fd, prefix, 0, prefix.length, 0);
-
-    fs.writeSync(fd, data, 0, data.length);
-
-    let postfix = Buffer.from(')"');
-    fs.writeSync(fd, postfix, 0, postfix.length, 0);
-
-    fs.close(fd);
-    cb();
+task('copy', () => {
+    return src([dir.dist.files, dir.src.assets.files])
+        .pipe(dest(dir.target.base));
 });
 
 task('bs-reload', cb => {
@@ -145,4 +152,5 @@ task('dev', () => {
 
 // export tasks
 exports.develop = series(['clean', 'js', 'scss', 'html', 'dev']);
-exports.default = exports.build = series(['clean', 'js', 'scss', 'html', 'header']);
+exports.build = series(['clean', 'js', 'scss', 'html']);
+exports.default = exports.install = series(['clean', 'js', 'scss', 'html', 'copy']);

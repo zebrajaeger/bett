@@ -1,0 +1,8 @@
+#ifndef _config_h_
+#define _config_h_
+
+#define WIFI_DEVICENAME "Bett"
+#define WIFI_SSID       "..."
+#define WIFI_PASSWORD   "..."
+
+#endif // _config_h_
