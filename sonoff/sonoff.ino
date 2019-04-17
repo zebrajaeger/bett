@@ -10,74 +10,112 @@ Webserver webserver;
 Ota ota;
 Io io;
 
+#define TIMEOUT_TIME_MS 200
+#define DIRSWITCH_DELAY_TIME_MS 500
+
 // FSM
 enum MOVE_STATE {
   MOVE_UP, AFTER_MOVE_UP, MOVE_DOWN, AFTER_MOVE_DOWN, MOVE_IDLE
 };
 MOVE_STATE fsmState = MOVE_IDLE;
 
-void onTimer() {
+//------------------------------------------------------------------------------
+void onTimer() 
+//------------------------------------------------------------------------------
+{
   switch (fsmState) {
     case MOVE_UP:
-      Serial.println("I");
+      Serial.println("U_IDLE");
       fsmState = AFTER_MOVE_UP;
       io.idle();
-      timer.start(500);
+      timer.start(DIRSWITCH_DELAY_TIME_MS);
       break;
     case AFTER_MOVE_UP:
-      Serial.println("I");
+      Serial.println("IDLE");
       fsmState = MOVE_IDLE;
       io.idle();
       break;
     case MOVE_DOWN:
-      Serial.println("I");
+      Serial.println("D-IDLE");
       fsmState = AFTER_MOVE_DOWN;
       io.idle();
-      timer.start(500);
+      timer.start(DIRSWITCH_DELAY_TIME_MS);
       break;
     case AFTER_MOVE_DOWN:
-      Serial.println("I");
+      Serial.println("IDLE");
       fsmState = MOVE_IDLE;
       io.idle();
       break;
   }
 }
 
-void onUp() {
+//------------------------------------------------------------------------------
+void onUp() 
+//------------------------------------------------------------------------------
+{
   switch (fsmState) {
     case AFTER_MOVE_UP:
     case MOVE_IDLE:
-      Serial.println("U");
+      Serial.println("UP");
     case MOVE_UP:
-      timer.start(100);
+      timer.start(TIMEOUT_TIME_MS);
       fsmState = MOVE_UP;
       io.up();
       break;
   }
 }
 
-void onDown() {
+//------------------------------------------------------------------------------
+void onDown() 
+//------------------------------------------------------------------------------
+{
   switch (fsmState) {
     case AFTER_MOVE_DOWN:
     case MOVE_IDLE:
-      Serial.println("D");
+      Serial.println("DOWN");
     case MOVE_DOWN:
-      timer.start(100);
+      timer.start(TIMEOUT_TIME_MS);
       fsmState = MOVE_DOWN;
       io.down();
       break;
   }
 }
 
-void setup() {
+//------------------------------------------------------------------------------
+void onStop() 
+//------------------------------------------------------------------------------
+{
+  switch (fsmState) {
+    case MOVE_UP:
+      fsmState = AFTER_MOVE_UP;
+      io.idle();
+      timer.start(DIRSWITCH_DELAY_TIME_MS);
+      break;
+
+    case MOVE_DOWN:
+      fsmState = AFTER_MOVE_DOWN;
+      io.idle();
+      timer.start(DIRSWITCH_DELAY_TIME_MS);
+      break;
+  }
+}
+
+//------------------------------------------------------------------------------
+void setup() 
+//------------------------------------------------------------------------------
+{
   io.setup();
   timer.setup(onTimer);
   wifi.setup();
-  ota.setup();
-  webserver.setup(onUp, onDown);
+  ota.setup(&io);
+  webserver.setup(onUp, onDown, onStop);
+  io.led(1);
 }
 
-void loop() {
+//------------------------------------------------------------------------------
+void loop() 
+//------------------------------------------------------------------------------
+{
   io.loop();
   timer.loop();
   wifi.loop();

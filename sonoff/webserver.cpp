@@ -5,16 +5,19 @@ Webserver::Webserver()
 //------------------------------------------------------------------------------
   : server(80)
   , callbackUp(NULL)
-  , callbackDown(NULL) {
+  , callbackDown(NULL)
+  , callbackStop(NULL)
+{
 }
 
 //------------------------------------------------------------------------------
-void Webserver::setup(void(*up)(), void(*down)())
+void Webserver::setup(void(*cbUp)(), void(*cbDown)(), void(*cbStop)())
 //------------------------------------------------------------------------------
 {
+  callbackUp = cbUp;
+  callbackDown = cbDown;
+  callbackStop = cbStop;
 
-  callbackUp = up;
-  callbackDown = down;
   SPIFFS.begin();
 
   Dir dir = SPIFFS.openDir("/");
@@ -30,6 +33,7 @@ void Webserver::setup(void(*up)(), void(*down)())
   //server.on("/", std::bind(&Webserver::handleRoot, this));
   server.on("/u", std::bind(&Webserver::handleUp, this));
   server.on("/d", std::bind(&Webserver::handleDown, this));
+  server.on("/s", std::bind(&Webserver::handleStop, this));
   server.onNotFound(std::bind(&Webserver::handleNotFound, this));
 
   server.begin();
@@ -56,6 +60,14 @@ void Webserver::handleDown()
 //------------------------------------------------------------------------------
 {
   if (callbackDown) callbackDown();
+  server.send(200, "text/plain", "");
+}
+
+//------------------------------------------------------------------------------
+void Webserver::handleStop()
+//------------------------------------------------------------------------------
+{
+  if (callbackStop) callbackStop();
   server.send(200, "text/plain", "");
 }
 

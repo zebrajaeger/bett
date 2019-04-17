@@ -6,7 +6,7 @@ Io::Io()
 //------------------------------------------------------------------------------
   : pin_up(12)
   , pin_down(13)
-  , pin_led(14)
+  , pin_led(0)
   , ledValue(false)
 {};
 
@@ -58,7 +58,13 @@ void Io::idle()
 void Io::led(bool value)
 //------------------------------------------------------------------------------
 {
-  digitalWrite(pin_led, value);
+  if (value) {
+    digitalWrite(pin_led, 0);
+    pinMode(pin_led, INPUT);
+  } else {
+    pinMode(pin_led, OUTPUT);
+    digitalWrite(pin_led, 0);
+  }
   ledValue = value;
 }
 

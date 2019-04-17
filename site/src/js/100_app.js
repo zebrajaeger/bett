@@ -1,5 +1,5 @@
 let app = {
-    runState: 'stop',
+    runState: 'stopped',
     $up: null,
     $down: null,
     timer: null,
@@ -28,8 +28,11 @@ function onTimer() {
         callBed('u');
     } else if (app.state === 'down') {
         callBed('d');
-    } else {
+    } else if (app.state === 'stopping') {
+        callBed('s');
         stopTimer();
+    } else {
+        console.error('unknown state in onTimer(): ' + app.state)
     }
 }
 
@@ -41,7 +44,7 @@ function startTimer() {
 }
 
 function stopTimer() {
-    if (!app.timer) {
+    if (app.timer) {
         clearInterval(app.timer);
         app.timer = null;
     }
@@ -56,11 +59,13 @@ function setState(state) {
         app.$down.addClass('active');
         app.state = 'down';
         startTimer();
-    } else {
+    } else if (state === 'stop') {
         app.$up.removeClass('active');
         app.$down.removeClass('active');
-        app.state = 'stop';
-        stopTimer();
+        app.state = 'stopping';
+        startTimer();
+    } else {
+        console.error('unknown state for setState(): ' + state)
     }
 }
 

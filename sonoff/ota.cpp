@@ -3,12 +3,15 @@
 //------------------------------------------------------------------------------
 Ota::Ota()
 //------------------------------------------------------------------------------
+  : io(NULL)
 {}
 
 //------------------------------------------------------------------------------
-void Ota::setup()
+void Ota::setup(Io* pIo)
 //------------------------------------------------------------------------------
 {
+  io = pIo;
+
   ArduinoOTA.onStart([]() {
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH) {
@@ -21,13 +24,17 @@ void Ota::setup()
     Serial.println("Start updating " + type);
   });
 
-  ArduinoOTA.onEnd([]() {
-    //led_set(0);
+  ArduinoOTA.onEnd([&]() {
+    if (Ota::io) {
+      Ota::io->led(0);
+    }
     Serial.println("\nEnd");
   });
 
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    // led_toggle()
+  ArduinoOTA.onProgress([&](unsigned int progress, unsigned int total) {
+    if (Ota::io) {
+      Ota::io->ledToggle();
+    }
     Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
 

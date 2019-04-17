@@ -8,16 +8,19 @@
 class Webserver {
   public:
     Webserver();
-    void setup(void(*up)(), void(*down)());
+    void setup(void(*cbUp)(), void(*vbDown)(), void(*cbStop)());
     void loop();
 
   private:
     ESP8266WebServer server;
     void(*callbackUp)();
     void(*callbackDown)();
+    void(*callbackStop)();
 
     void handleUp();
     void handleDown();
+    void handleStop();
+
     void handleNotFound();
 
     void send404();
